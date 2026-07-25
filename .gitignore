@@ -3,3 +3,7 @@ __pycache__/
 .vscode/
 .ipynb_checkpoints/
 *.pyc
+dataset/
+excel_data/
+static/uploads/
+static/reports/
