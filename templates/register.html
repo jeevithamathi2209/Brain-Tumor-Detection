@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register — BrainScanAI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body class="auth-body">
+
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="{{ url_for('index') }}" class="nav-brand">🧠 BrainScan<span class="brand-accent">AI</span></a>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">
+          <span class="flash-icon">{% if category == 'success' %}✅{% elif category == 'error' %}❌{% else %}ℹ️{% endif %}</span>
+          {{ message }}
+          <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-icon">👤</div>
+      <h1>Create Account</h1>
+      <p>Join BrainScanAI for free</p>
+    </div>
+    <form method="POST" class="auth-form" id="registerForm" novalidate>
+      <div class="form-group">
+        <label for="full_name">Full Name</label>
+        <input type="text" id="full_name" name="full_name" placeholder="Enter your full name"
+               required minlength="2" autocomplete="name" />
+        <span class="form-error" id="nameError"></span>
+      </div>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="Choose a username"
+               required minlength="3" autocomplete="username" />
+        <span class="form-error" id="usernameError"></span>
+      </div>
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email"
+               required autocomplete="email" />
+        <span class="form-error" id="emailError"></span>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-wrapper">
+          <input type="password" id="password" name="password" placeholder="Create a password (min 6 chars)"
+                 required minlength="6" autocomplete="new-password" />
+          <button type="button" class="toggle-pw" onclick="togglePassword('password')">👁</button>
+        </div>
+        <div class="password-strength" id="strengthBar">
+          <div class="strength-fill" id="strengthFill"></div>
+        </div>
+        <span class="form-error" id="passwordError"></span>
+      </div>
+      <div class="form-group">
+        <label for="confirm_password">Confirm Password</label>
+        <div class="input-wrapper">
+          <input type="password" id="confirm_password" name="confirm_password"
+                 placeholder="Repeat your password" required autocomplete="new-password" />
+          <button type="button" class="toggle-pw" onclick="togglePassword('confirm_password')">👁</button>
+        </div>
+        <span class="form-error" id="confirmError"></span>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full" id="registerBtn">
+        <span class="btn-text">Create Account</span>
+        <span class="btn-loader hidden">⏳</span>
+      </button>
+    </form>
+    <div class="auth-footer">
+      <p>Already have an account? <a href="{{ url_for('login') }}">Sign In</a></p>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+  document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const pw = document.getElementById('password').value;
+    const cpw = document.getElementById('confirm_password').value;
+    if (pw !== cpw) {
+      e.preventDefault();
+      document.getElementById('confirmError').textContent = 'Passwords do not match.';
+    }
+  });
+
+  document.getElementById('password').addEventListener('input', function() {
+    updateStrength(this.value);
+  });
+
+  function updateStrength(pw) {
+    const fill = document.getElementById('strengthFill');
+    let score = 0;
+    if (pw.length >= 6) score++;
+    if (pw.length >= 10) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    const pct = (score / 5) * 100;
+    fill.style.width = pct + '%';
+    fill.className = 'strength-fill ' + (score <= 1 ? 'weak' : score <= 3 ? 'medium' : 'strong');
+  }
+</script>
+</body>
+</html>

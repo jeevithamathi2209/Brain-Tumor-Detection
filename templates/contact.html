@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — BrainScanAI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="{{ url_for('index') }}" class="nav-brand">🧠 BrainScan<span class="brand-accent">AI</span></a>
+    <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="{{ url_for('index') }}" class="nav-link">Home</a></li>
+      <li><a href="{{ url_for('about') }}" class="nav-link">About</a></li>
+      <li><a href="{{ url_for('contact') }}" class="nav-link active">Contact</a></li>
+      {% if session.user_id %}
+        <li><a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a></li>
+      {% else %}
+        <li><a href="{{ url_for('login') }}" class="nav-link">Login</a></li>
+        <li><a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">Register</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}<button class="flash-close" onclick="this.parentElement.remove()">×</button></div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="page-wrapper">
+  <div class="page-header">
+    <div class="container">
+      <h1>📬 Contact Us</h1>
+      <p>Get in touch with our development team</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="contact-layout">
+
+      <!-- Contact Form -->
+      <div class="contact-form-card">
+        <h2>Send a Message</h2>
+        <form method="POST" class="contact-form" id="contactForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Your Name</label>
+              <input type="text" name="name" placeholder="Full name" required />
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" name="email" placeholder="your@email.com" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Subject</label>
+            <input type="text" name="subject" placeholder="What is this about?" required />
+          </div>
+          <div class="form-group">
+            <label>Message</label>
+            <textarea name="message" rows="6" placeholder="Write your message here..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">📨 Send Message</button>
+        </form>
+      </div>
+
+      <!-- Contact Info -->
+      <div class="contact-info">
+        <div class="info-card">
+          <h3>📍 Location</h3>
+          <p>Manipal Institute of Technology<br />Manipal, Karnataka 576104<br />India</p>
+        </div>
+        <div class="info-card">
+          <h3>📧 Email</h3>
+          <p><a href="mailto:info@brainscanaai.com">info@brainscanaai.com</a></p>
+          <p><a href="mailto:support@brainscanaai.com">support@brainscanaai.com</a></p>
+        </div>
+        <div class="info-card">
+          <h3>📞 Phone</h3>
+          <p>+91 98765 43210</p>
+          <p>Mon–Fri, 9 AM–6 PM IST</p>
+        </div>
+        <div class="info-card info-card-warning">
+          <h3>⚠️ Medical Disclaimer</h3>
+          <p>This system is for <strong>educational purposes only</strong>. For medical concerns, please consult a qualified healthcare professional.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom">
+      <p>© 2025 Brain Tumor Detection System — Educational Purposes Only</p>
+    </div>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

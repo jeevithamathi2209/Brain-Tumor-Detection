@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — BrainScanAI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body class="auth-body">
+
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="{{ url_for('index') }}" class="nav-brand">🧠 BrainScan<span class="brand-accent">AI</span></a>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">
+          <span>{% if category == 'success' %}✅{% elif category == 'error' %}❌{% else %}ℹ️{% endif %}</span>
+          {{ message }}
+          <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-icon">🔐</div>
+      <h1>Welcome Back</h1>
+      <p>Sign in to your account</p>
+    </div>
+    <form method="POST" class="auth-form">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="Enter your username"
+               required autocomplete="username" autofocus />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-wrapper">
+          <input type="password" id="password" name="password" placeholder="Enter your password"
+                 required autocomplete="current-password" />
+          <button type="button" class="toggle-pw" onclick="togglePassword('password')">👁</button>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+    </form>
+    <div class="auth-footer">
+      <p>Don't have an account? <a href="{{ url_for('register') }}">Register Free</a></p>
+      <p><a href="{{ url_for('index') }}">← Back to Home</a></p>
+    </div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

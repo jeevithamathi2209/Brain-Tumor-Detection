@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile — BrainScanAI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="{{ url_for('index') }}" class="nav-brand">🧠 BrainScan<span class="brand-accent">AI</span></a>
+    <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a></li>
+      <li><a href="{{ url_for('upload') }}" class="nav-link">Upload MRI</a></li>
+      <li><a href="{{ url_for('history') }}" class="nav-link">History</a></li>
+      <li class="nav-dropdown">
+        <button class="nav-link nav-user-btn active">{{ session.full_name.split()[0] }} ▾</button>
+        <div class="nav-dropdown-menu">
+          <a href="{{ url_for('profile') }}">👤 Profile</a>
+          <a href="{{ url_for('logout') }}">🚪 Logout</a>
+        </div>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">
+          {{ message }}<button class="flash-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="page-wrapper">
+  <div class="page-header">
+    <div class="container">
+      <h1>👤 My Profile</h1>
+      <p>Manage your account information</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="profile-layout">
+
+      <!-- Sidebar -->
+      <div class="profile-sidebar">
+        <div class="profile-avatar-card">
+          <div class="profile-avatar">{{ session.full_name[0].upper() }}</div>
+          <h3>{{ session.full_name }}</h3>
+          <p>@{{ session.username }}</p>
+          <p class="profile-email">{{ session.email }}</p>
+        </div>
+        <nav class="profile-nav">
+          <button class="profile-nav-item active" onclick="showTab('info')">📝 Personal Info</button>
+          <button class="profile-nav-item" onclick="showTab('password')">🔒 Change Password</button>
+        </nav>
+      </div>
+
+      <!-- Tabs -->
+      <div class="profile-main">
+
+        <!-- Personal Info Tab -->
+        <div class="profile-tab active" id="tab-info">
+          <div class="card">
+            <div class="card-header">
+              <h2>Personal Information</h2>
+            </div>
+            <form method="POST">
+              <input type="hidden" name="action" value="update_info" />
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Full Name</label>
+                  <input type="text" name="full_name" value="{{ session.full_name }}" required />
+                </div>
+                <div class="form-group">
+                  <label>Username</label>
+                  <input type="text" value="{{ session.username }}" disabled class="input-disabled" />
+                  <span class="form-hint">Username cannot be changed</span>
+                </div>
+                <div class="form-group">
+                  <label>Email Address</label>
+                  <input type="email" name="email" value="{{ session.email }}" required />
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Password Tab -->
+        <div class="profile-tab" id="tab-password">
+          <div class="card">
+            <div class="card-header">
+              <h2>Change Password</h2>
+            </div>
+            <form method="POST">
+              <input type="hidden" name="action" value="change_password" />
+              <div class="form-group">
+                <label>Current Password</label>
+                <div class="input-wrapper">
+                  <input type="password" id="currentPw" name="current_password" placeholder="Enter current password" required />
+                  <button type="button" class="toggle-pw" onclick="togglePassword('currentPw')">👁</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>New Password</label>
+                <div class="input-wrapper">
+                  <input type="password" id="newPw" name="new_password" placeholder="Enter new password (min 6 chars)" required minlength="6" />
+                  <button type="button" class="toggle-pw" onclick="togglePassword('newPw')">👁</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Confirm New Password</label>
+                <div class="input-wrapper">
+                  <input type="password" id="confirmPw" name="confirm_password" placeholder="Repeat new password" required />
+                  <button type="button" class="toggle-pw" onclick="togglePassword('confirmPw')">👁</button>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">🔒 Update Password</button>
+            </form>
+          </div>
+        </div>
+
+      </div><!-- /profile-main -->
+    </div><!-- /profile-layout -->
+  </div>
+</div>
+
+{% include 'footer_partial.html' %}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+  function showTab(name) {
+    document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.profile-nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.currentTarget.classList.add('active');
+  }
+</script>
+</body>
+</html>

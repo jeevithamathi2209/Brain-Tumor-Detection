@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Error {{ code }} — BrainScanAI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="{{ url_for('index') }}" class="nav-brand">🧠 BrainScan<span class="brand-accent">AI</span></a>
+  </div>
+</nav>
+<div class="page-wrapper">
+  <div class="error-page">
+    <div class="error-code">{{ code }}</div>
+    <h1>Oops! Something went wrong.</h1>
+    <p>{{ message }}</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">← Back to Home</a>
+  </div>
+</div>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

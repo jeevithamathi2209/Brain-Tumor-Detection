@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brain Tumor Detection System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}" />
+</head>
+<body>
+
+<!-- ═══ NAVIGATION ═══════════════════════════════════════════════════════════ -->
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="{{ url_for('index') }}" class="nav-brand">
+      <span class="brand-icon">🧠</span>
+      <span class="brand-text">BrainScan<span class="brand-accent">AI</span></span>
+    </a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Home</a></li>
+      <li><a href="{{ url_for('about') }}" class="nav-link {% if request.endpoint == 'about' %}active{% endif %}">About</a></li>
+      <li><a href="{{ url_for('contact') }}" class="nav-link {% if request.endpoint == 'contact' %}active{% endif %}">Contact</a></li>
+      {% if session.user_id %}
+        <li><a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+        <li><a href="{{ url_for('upload') }}" class="nav-link {% if request.endpoint == 'upload' %}active{% endif %}">Upload MRI</a></li>
+        <li><a href="{{ url_for('history') }}" class="nav-link {% if request.endpoint == 'history' %}active{% endif %}">History</a></li>
+        <li class="nav-dropdown">
+          <button class="nav-link nav-user-btn">{{ session.full_name.split()[0] }} ▾</button>
+          <div class="nav-dropdown-menu">
+            <a href="{{ url_for('profile') }}">👤 Profile</a>
+            <a href="{{ url_for('logout') }}">🚪 Logout</a>
+          </div>
+        </li>
+      {% else %}
+        <li><a href="{{ url_for('login') }}" class="nav-link {% if request.endpoint == 'login' %}active{% endif %}">Login</a></li>
+        <li><a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">Register</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>
+
+<!-- ═══ FLASH MESSAGES ═══════════════════════════════════════════════════════ -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container" id="flashContainer">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">
+          <span class="flash-icon">
+            {% if category == 'success' %}✅{% elif category == 'error' %}❌{% elif category == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+          </span>
+          {{ message }}
+          <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<!-- ═══ HERO ═══════════════════════════════════════════════════════════════════ -->
+<section class="hero" id="home">
+  <div class="hero-bg-animation">
+    <div class="hero-particle"></div><div class="hero-particle"></div>
+    <div class="hero-particle"></div><div class="hero-particle"></div>
+    <div class="hero-particle"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge">🔬 AI-Powered Medical Imaging</div>
+    <h1 class="hero-title">
+      Brain Tumor Detection
+      <span class="hero-title-accent">Using Deep Learning</span>
+    </h1>
+    <p class="hero-subtitle">
+      Advanced CNN-based MRI analysis for detecting Glioma, Meningioma,
+      Pituitary tumors, and confirming healthy brain scans with high accuracy.
+    </p>
+    <div class="hero-actions">
+      {% if session.user_id %}
+        <a href="{{ url_for('upload') }}" class="btn btn-primary btn-lg">🧠 Upload MRI Scan</a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline btn-lg">📊 Dashboard</a>
+      {% else %}
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Get Started Free</a>
+        <a href="#features" class="btn btn-outline btn-lg">Learn More</a>
+      {% endif %}
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><span class="hero-stat-num">4</span><span class="hero-stat-label">Classes</span></div>
+      <div class="hero-stat"><span class="hero-stat-num">CNN</span><span class="hero-stat-label">Architecture</span></div>
+      <div class="hero-stat"><span class="hero-stat-num">95%+</span><span class="hero-stat-label">Accuracy</span></div>
+      <div class="hero-stat"><span class="hero-stat-num">PDF</span><span class="hero-stat-label">Reports</span></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="brain-scan-card">
+      <div class="scan-header">
+        <span class="scan-dot scan-dot-red"></span>
+        <span class="scan-dot scan-dot-yellow"></span>
+        <span class="scan-dot scan-dot-green"></span>
+        <span class="scan-title">MRI Analysis</span>
+      </div>
+      <div class="scan-body">
+        <div class="scan-brain">🧠</div>
+        <div class="scan-result">
+          <div class="scan-label">Status</div>
+          <div class="scan-value analyzing" id="heroScanAnim">Analyzing...</div>
+        </div>
+        <div class="scan-bars">
+          <div class="scan-bar" style="--w:87%"><span>Glioma</span><div class="bar-fill" style="width:87%"></div><span>87%</span></div>
+          <div class="scan-bar" style="--w:45%"><span>Meningioma</span><div class="bar-fill" style="width:45%"></div><span>45%</span></div>
+          <div class="scan-bar" style="--w:23%"><span>Pituitary</span><div class="bar-fill" style="width:23%"></div><span>23%</span></div>
+          <div class="scan-bar" style="--w:12%"><span>No Tumor</span><div class="bar-fill" style="width:12%"></div><span>12%</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ══════════════════════════════════════════════════════════════ -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">What We Offer</span>
+      <h2 class="section-title">Powerful Features</h2>
+      <p class="section-subtitle">Everything you need for accurate brain tumor detection and analysis</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3>Deep Learning CNN</h3>
+        <p>Custom-built Convolutional Neural Network trained on thousands of MRI scans for maximum accuracy.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h3>4-Class Detection</h3>
+        <p>Accurately classifies Glioma, Meningioma, Pituitary tumors, and No Tumor from a single MRI image.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📊</div>
+        <h3>Confidence Scores</h3>
+        <p>Every prediction comes with a detailed confidence score to assess reliability of the analysis.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📄</div>
+        <h3>PDF Reports</h3>
+        <p>Generate and download professional medical-style PDF reports for each prediction instantly.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <h3>Prediction History</h3>
+        <p>Track all your past predictions with search, filter, and management capabilities.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Secure & Private</h3>
+        <p>User authentication with bcrypt password hashing. Your data is stored securely.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ══════════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="how-it-works">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Simple Process</span>
+      <h2 class="section-title">How It Works</h2>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">01</div>
+        <div class="step-icon">👤</div>
+        <h3>Create Account</h3>
+        <p>Register a free account to access the full system and track your predictions.</p>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step-card">
+        <div class="step-number">02</div>
+        <div class="step-icon">📤</div>
+        <h3>Upload MRI</h3>
+        <p>Upload your brain MRI image in PNG, JPG, or other supported formats.</p>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step-card">
+        <div class="step-number">03</div>
+        <div class="step-icon">🤖</div>
+        <h3>AI Analysis</h3>
+        <p>Our CNN model analyzes the image and classifies the tumor type in seconds.</p>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step-card">
+        <div class="step-number">04</div>
+        <div class="step-icon">📋</div>
+        <h3>Get Report</h3>
+        <p>View detailed results and download a professional PDF report instantly.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TUMOR CLASSES ══════════════════════════════════════════════════════════ -->
+<section class="section" id="classes">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Detection Classes</span>
+      <h2 class="section-title">What We Detect</h2>
+    </div>
+    <div class="classes-grid">
+      <div class="class-card class-glioma">
+        <div class="class-icon">🔴</div>
+        <h3>Glioma Tumor</h3>
+        <p>Tumor arising from glial cells in the brain or spinal cord. Can be malignant or benign.</p>
+        <span class="class-badge">High Priority</span>
+      </div>
+      <div class="class-card class-meningioma">
+        <div class="class-icon">🟡</div>
+        <h3>Meningioma Tumor</h3>
+        <p>Tumor arising from the meninges. Usually benign and slow-growing.</p>
+        <span class="class-badge">Moderate Priority</span>
+      </div>
+      <div class="class-card class-pituitary">
+        <div class="class-icon">🟠</div>
+        <h3>Pituitary Tumor</h3>
+        <p>Abnormal growth in the pituitary gland. Often affects hormone production.</p>
+        <span class="class-badge">Moderate Priority</span>
+      </div>
+      <div class="class-card class-notumor">
+        <div class="class-icon">🟢</div>
+        <h3>No Tumor</h3>
+        <p>Normal brain scan with no detectable tumor. Healthy brain structure confirmed.</p>
+        <span class="class-badge class-badge-green">Clear</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TEAM ═══════════════════════════════════════════════════════════════════ -->
+<section class="section section-alt" id="team">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag">Our Team</span>
+      <h2 class="section-title">Meet the Developers</h2>
+    </div>
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-avatar">👨‍💻</div>
+        <h3>Lead Developer</h3>
+        <p class="team-role">Full Stack & ML Engineer</p>
+        <p class="team-desc">Designed and implemented the CNN model, Flask backend, and system architecture.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">👩‍🎨</div>
+        <h3>UI/UX Designer</h3>
+        <p class="team-role">Frontend Developer</p>
+        <p class="team-desc">Created the responsive UI design, animations, and user experience flow.</p>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">👨‍🔬</div>
+        <h3>ML Researcher</h3>
+        <p class="team-role">Data Scientist</p>
+        <p class="team-desc">Curated training dataset, fine-tuned model hyperparameters, and evaluated performance.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA ════════════════════════════════════════════════════════════════════ -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-content">
+      <h2>Ready to Analyze Your MRI Scan?</h2>
+      <p>Join thousands of users benefiting from AI-powered brain tumor detection.</p>
+      <div class="cta-actions">
+        {% if session.user_id %}
+          <a href="{{ url_for('upload') }}" class="btn btn-white btn-lg">Upload MRI Now</a>
+        {% else %}
+          <a href="{{ url_for('register') }}" class="btn btn-white btn-lg">Create Free Account</a>
+          <a href="{{ url_for('login') }}" class="btn btn-outline-white btn-lg">Sign In</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="nav-brand">🧠 BrainScan<span class="brand-accent">AI</span></div>
+        <p>Advanced brain tumor detection system powered by Deep Learning and Computer Vision.</p>
+      </div>
+      <div class="footer-links">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="{{ url_for('index') }}">Home</a></li>
+          <li><a href="{{ url_for('about') }}">About</a></li>
+          <li><a href="{{ url_for('contact') }}">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-links">
+        <h4>Account</h4>
+        <ul>
+          {% if session.user_id %}
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            <li><a href="{{ url_for('upload') }}">Upload MRI</a></li>
+            <li><a href="{{ url_for('history') }}">History</a></li>
+          {% else %}
+            <li><a href="{{ url_for('register') }}">Register</a></li>
+            <li><a href="{{ url_for('login') }}">Login</a></li>
+          {% endif %}
+        </ul>
+      </div>
+      <div class="footer-contact">
+        <h4>Contact</h4>
+        <p>📧 info@brainscanaai.com</p>
+        <p>📞 +91 98765 43210</p>
+        <p>📍 Manipal Institute of Technology, Bangalore</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 Brain Tumor Detection System — Built for Educational Purposes</p>
+      <p class="footer-disclaimer">⚠️ Not a substitute for professional medical advice.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

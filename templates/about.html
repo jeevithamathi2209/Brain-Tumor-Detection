@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About — BrainScanAI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="{{ url_for('index') }}" class="nav-brand">🧠 BrainScan<span class="brand-accent">AI</span></a>
+    <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="{{ url_for('index') }}" class="nav-link">Home</a></li>
+      <li><a href="{{ url_for('about') }}" class="nav-link active">About</a></li>
+      <li><a href="{{ url_for('contact') }}" class="nav-link">Contact</a></li>
+      {% if session.user_id %}
+        <li><a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a></li>
+        <li class="nav-dropdown">
+          <button class="nav-link nav-user-btn">{{ session.full_name.split()[0] }} ▾</button>
+          <div class="nav-dropdown-menu">
+            <a href="{{ url_for('profile') }}">👤 Profile</a>
+            <a href="{{ url_for('logout') }}">🚪 Logout</a>
+          </div>
+        </li>
+      {% else %}
+        <li><a href="{{ url_for('login') }}" class="nav-link">Login</a></li>
+        <li><a href="{{ url_for('register') }}" class="btn btn-primary btn-sm">Register</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>
+
+<div class="page-wrapper">
+  <div class="page-header">
+    <div class="container">
+      <h1>ℹ️ About This System</h1>
+      <p>Learn about the technology and vision behind BrainScanAI</p>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- Project Overview -->
+    <section class="about-section">
+      <div class="about-grid">
+        <div class="about-content">
+          <span class="section-tag">The Project</span>
+          <h2>Brain Tumor Detection Using Deep Learning</h2>
+          <p>This system leverages Convolutional Neural Networks (CNN) trained on thousands of brain MRI scans to classify tumors into four categories with high accuracy. It provides a user-friendly web interface for medical imaging analysis.</p>
+          <p>Built as an end-to-end solution — from image preprocessing and deep learning inference to PDF report generation — this project demonstrates the practical application of AI in medical imaging.</p>
+        </div>
+        <div class="about-visual">
+          <div class="tech-stack-card">
+            <h3>🛠 Tech Stack</h3>
+            <div class="tech-items">
+              <span class="tech-chip">Python</span>
+              <span class="tech-chip">Flask</span>
+              <span class="tech-chip">TensorFlow</span>
+              <span class="tech-chip">Keras</span>
+              <span class="tech-chip">OpenCV</span>
+              <span class="tech-chip">NumPy</span>
+              <span class="tech-chip">Pandas</span>
+              <span class="tech-chip">HTML5</span>
+              <span class="tech-chip">CSS3</span>
+              <span class="tech-chip">JavaScript</span>
+              <span class="tech-chip">ReportLab</span>
+              <span class="tech-chip">bcrypt</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Objectives -->
+    <section class="about-section">
+      <h2>🎯 Project Objectives</h2>
+      <div class="objectives-grid">
+        <div class="objective-card">
+          <div class="obj-num">01</div>
+          <h3>Accurate Classification</h3>
+          <p>Classify brain MRI scans into Glioma, Meningioma, Pituitary tumor, or No Tumor using a deep CNN model.</p>
+        </div>
+        <div class="objective-card">
+          <div class="obj-num">02</div>
+          <h3>Accessible Interface</h3>
+          <p>Provide a clean, responsive web interface accessible from any device with no technical knowledge required.</p>
+        </div>
+        <div class="objective-card">
+          <div class="obj-num">03</div>
+          <h3>Report Generation</h3>
+          <p>Automatically generate professional PDF reports containing scan results, confidence scores, and patient info.</p>
+        </div>
+        <div class="objective-card">
+          <div class="obj-num">04</div>
+          <h3>Historical Tracking</h3>
+          <p>Maintain a searchable, filterable history of all predictions for each user with full data management.</p>
+        </div>
+        <div class="objective-card">
+          <div class="obj-num">05</div>
+          <h3>Secure & Private</h3>
+          <p>Protect user data with bcrypt password hashing, session management, and secure file storage.</p>
+        </div>
+        <div class="objective-card">
+          <div class="obj-num">06</div>
+          <h3>Educational Impact</h3>
+          <p>Demonstrate practical ML application for medical imaging to educate students and researchers.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CNN Architecture -->
+    <section class="about-section">
+      <h2>🤖 CNN Model Architecture</h2>
+      <div class="arch-card">
+        <div class="arch-layers">
+          <div class="arch-layer arch-input">📥 Input Layer (150×150×3)</div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-layer arch-conv">⬛ Conv Block 1 — Conv2D(32) + BatchNorm + MaxPool + Dropout</div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-layer arch-conv">⬛ Conv Block 2 — Conv2D(64) + BatchNorm + MaxPool + Dropout</div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-layer arch-conv">⬛ Conv Block 3 — Conv2D(128) + BatchNorm + MaxPool + Dropout</div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-layer arch-conv">⬛ Conv Block 4 — Conv2D(256) + BatchNorm + MaxPool + Dropout</div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-layer arch-dense">⬜ Global Average Pooling → Dense(512) → Dense(256)</div>
+          <div class="arch-arrow">↓</div>
+          <div class="arch-layer arch-output">📤 Output Layer — Dense(4) + Softmax</div>
+        </div>
+        <div class="arch-info">
+          <p><strong>Training:</strong> Adam optimizer, Categorical Crossentropy loss, EarlyStopping & ReduceLROnPlateau callbacks.</p>
+          <p><strong>Data Augmentation:</strong> Rotation, flipping, zoom, shift for better generalization.</p>
+          <p><strong>Input Size:</strong> 150×150×3 (RGB MRI images normalized to [0,1]).</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dataset -->
+    <section class="about-section">
+      <h2>📂 Dataset Information</h2>
+      <div class="dataset-grid">
+        <div class="dataset-card">
+          <div class="dataset-icon">🔴</div>
+          <h3>Glioma</h3>
+          <p>MRI scans of patients diagnosed with glioma tumors</p>
+        </div>
+        <div class="dataset-card">
+          <div class="dataset-icon">🟡</div>
+          <h3>Meningioma</h3>
+          <p>MRI scans of patients with meningioma tumors</p>
+        </div>
+        <div class="dataset-card">
+          <div class="dataset-icon">🟠</div>
+          <h3>Pituitary</h3>
+          <p>MRI scans showing pituitary gland tumors</p>
+        </div>
+        <div class="dataset-card">
+          <div class="dataset-icon">🟢</div>
+          <h3>No Tumor</h3>
+          <p>Normal healthy brain MRI scans with no tumor</p>
+        </div>
+      </div>
+      <p class="dataset-note">
+        <strong>Recommended Dataset:</strong> Brain Tumor MRI Dataset on Kaggle (by Masoud Nickparvar) — 7,000+ images across 4 classes.
+        Organize into <code>dataset/glioma/</code>, <code>dataset/meningioma/</code>, <code>dataset/pituitary/</code>, <code>dataset/notumor/</code>
+      </p>
+    </section>
+
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom">
+      <p>© 2025 Brain Tumor Detection System — Educational Purposes Only</p>
+    </div>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

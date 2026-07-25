@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload MRI — BrainScanAI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="{{ url_for('index') }}" class="nav-brand">🧠 BrainScan<span class="brand-accent">AI</span></a>
+    <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a></li>
+      <li><a href="{{ url_for('upload') }}" class="nav-link active">Upload MRI</a></li>
+      <li><a href="{{ url_for('history') }}" class="nav-link">History</a></li>
+      <li class="nav-dropdown">
+        <button class="nav-link nav-user-btn">{{ session.full_name.split()[0] }} ▾</button>
+        <div class="nav-dropdown-menu">
+          <a href="{{ url_for('profile') }}">👤 Profile</a>
+          <a href="{{ url_for('logout') }}">🚪 Logout</a>
+        </div>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">
+          {{ message }}<button class="flash-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="page-wrapper">
+  <div class="page-header">
+    <div class="container">
+      <h1>🔬 Upload MRI Scan</h1>
+      <p>Upload a brain MRI image for AI-powered tumor detection</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="upload-layout">
+
+      <!-- Upload Card -->
+      <div class="upload-card">
+        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+          <div class="drop-zone" id="dropZone" onclick="document.getElementById('mri_image').click()">
+            <div class="drop-zone-inner" id="dropZoneInner">
+              <div class="drop-icon">📤</div>
+              <h3>Drop MRI Image Here</h3>
+              <p>or click to browse</p>
+              <span class="drop-hint">Supports: PNG, JPG, JPEG, BMP, GIF — Max 16MB</span>
+            </div>
+            <!-- Preview -->
+            <div class="preview-wrapper hidden" id="previewWrapper">
+              <img id="previewImg" src="" alt="MRI Preview" class="preview-image" />
+              <div class="preview-info" id="previewInfo"></div>
+            </div>
+          </div>
+          <input type="file" id="mri_image" name="mri_image" accept=".png,.jpg,.jpeg,.bmp,.gif"
+                 class="hidden" required />
+
+          <div class="upload-actions">
+            <button type="button" class="btn btn-outline" id="clearBtn" onclick="clearPreview()" style="display:none">
+              🗑 Clear
+            </button>
+            <button type="submit" class="btn btn-primary btn-full" id="submitBtn" disabled>
+              <span id="submitText">🤖 Analyze MRI Scan</span>
+              <span id="submitLoader" class="hidden">
+                <span class="spinner-sm"></span> Analyzing...
+              </span>
+            </button>
+          </div>
+
+          <!-- Progress bar (shown during upload) -->
+          <div class="progress-wrapper hidden" id="progressWrapper">
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p class="progress-label" id="progressLabel">Uploading image...</p>
+          </div>
+        </form>
+      </div>
+
+      <!-- Info Panel -->
+      <div class="upload-info-panel">
+        <div class="info-card">
+          <h3>📋 Instructions</h3>
+          <ol class="info-list">
+            <li>Select a brain MRI scan image</li>
+            <li>Preview the image before uploading</li>
+            <li>Click "Analyze MRI Scan"</li>
+            <li>Wait for the AI to process</li>
+            <li>View detailed results and download PDF</li>
+          </ol>
+        </div>
+        <div class="info-card info-card-warning">
+          <h3>⚠️ Important Notice</h3>
+          <p>This system is for <strong>educational purposes only</strong>. Results should NOT be used as medical diagnosis. Always consult a qualified medical professional.</p>
+        </div>
+        <div class="info-card">
+          <h3>🔍 Detection Classes</h3>
+          <div class="class-list">
+            <div class="class-item"><span class="class-dot dot-red"></span>Glioma Tumor</div>
+            <div class="class-item"><span class="class-dot dot-yellow"></span>Meningioma Tumor</div>
+            <div class="class-item"><span class="class-dot dot-orange"></span>Pituitary Tumor</div>
+            <div class="class-item"><span class="class-dot dot-green"></span>No Tumor</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /upload-layout -->
+  </div>
+</div>
+
+{% include 'footer_partial.html' %}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('mri_image');
+  const previewWrapper = document.getElementById('previewWrapper');
+  const dropZoneInner = document.getElementById('dropZoneInner');
+  const submitBtn = document.getElementById('submitBtn');
+  const clearBtn = document.getElementById('clearBtn');
+
+  // Drag and drop
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
+
+  function handleFile(file) {
+    const allowed = ['image/png','image/jpeg','image/bmp','image/gif'];
+    if (!allowed.includes(file.type)) {
+      alert('Invalid file type. Please select a PNG, JPG, BMP, or GIF image.');
+      return;
+    }
+    if (file.size > 16 * 1024 * 1024) {
+      alert('File too large. Maximum size is 16MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('previewImg').src = e.target.result;
+      document.getElementById('previewInfo').textContent = `${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+      dropZoneInner.classList.add('hidden');
+      previewWrapper.classList.remove('hidden');
+      submitBtn.disabled = false;
+      clearBtn.style.display = 'inline-flex';
+
+      // Set file to input if dropped
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      fileInput.files = dt.files;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearPreview() {
+    document.getElementById('previewImg').src = '';
+    previewWrapper.classList.add('hidden');
+    dropZoneInner.classList.remove('hidden');
+    submitBtn.disabled = true;
+    clearBtn.style.display = 'none';
+    fileInput.value = '';
+  }
+
+  // Show loader on submit
+  document.getElementById('uploadForm').addEventListener('submit', function() {
+    document.getElementById('submitText').classList.add('hidden');
+    document.getElementById('submitLoader').classList.remove('hidden');
+    document.getElementById('progressWrapper').classList.remove('hidden');
+    submitBtn.disabled = true;
+    animateProgress();
+  });
+
+  function animateProgress() {
+    let w = 0;
+    const fill = document.getElementById('progressFill');
+    const label = document.getElementById('progressLabel');
+    const labels = ['Uploading image...','Preprocessing MRI...','Running CNN model...','Generating report...'];
+    let li = 0;
+    const iv = setInterval(() => {
+      w += Math.random() * 8;
+      if (w > 90) w = 90;
+      fill.style.width = w + '%';
+      if (w > 25 * (li + 1) && li < labels.length - 1) { li++; label.textContent = labels[li]; }
+    }, 300);
+  }
+</script>
+</body>
+</html>

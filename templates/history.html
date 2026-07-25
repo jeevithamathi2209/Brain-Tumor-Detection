@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prediction History — BrainScanAI</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+
+<nav class="navbar" id="navbar">
+  <div class="nav-container">
+    <a href="{{ url_for('index') }}" class="nav-brand">🧠 BrainScan<span class="brand-accent">AI</span></a>
+    <button class="nav-toggle" id="navToggle"><span></span><span></span><span></span></button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a></li>
+      <li><a href="{{ url_for('upload') }}" class="nav-link">Upload MRI</a></li>
+      <li><a href="{{ url_for('history') }}" class="nav-link active">History</a></li>
+      <li class="nav-dropdown">
+        <button class="nav-link nav-user-btn">{{ session.full_name.split()[0] }} ▾</button>
+        <div class="nav-dropdown-menu">
+          <a href="{{ url_for('profile') }}">👤 Profile</a>
+          <a href="{{ url_for('logout') }}">🚪 Logout</a>
+        </div>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}<button class="flash-close" onclick="this.parentElement.remove()">×</button></div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="page-wrapper">
+  <div class="page-header">
+    <div class="container">
+      <h1>📋 Prediction History</h1>
+      <p>All your brain tumor detection analyses</p>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- Filters & Search -->
+    <div class="history-controls">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search by ID, tumor type, or date..." />
+      </div>
+      <div class="filter-btns">
+        <button class="filter-btn active" data-filter="all" onclick="filterPredictions('all', this)">All</button>
+        <button class="filter-btn" data-filter="tumor" onclick="filterPredictions('tumor', this)">Tumor</button>
+        <button class="filter-btn" data-filter="notumor" onclick="filterPredictions('notumor', this)">No Tumor</button>
+      </div>
+    </div>
+
+    {% if predictions %}
+      <div class="table-wrapper" id="historyTableWrapper">
+        <table class="data-table" id="historyTable">
+          <thead>
+            <tr>
+              <th>MRI</th>
+              <th>ID</th>
+              <th>Tumor Type</th>
+              <th>Confidence</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            {% for pred in predictions %}
+              <tr class="history-row"
+                  data-type="{{ 'tumor' if pred.is_tumor == 'True' else 'notumor' }}"
+                  data-search="{{ pred.prediction_id }} {{ pred.display_name }} {{ pred.created_at }}">
+                <td>
+                  <img src="{{ url_for('static', filename='uploads/' + pred.image_filename) }}"
+                       alt="MRI" class="table-thumb" />
+                </td>
+                <td><code>{{ pred.prediction_id }}</code></td>
+                <td>{{ pred.display_name }}</td>
+                <td>
+                  <div class="conf-bar-wrap">
+                    <div class="conf-bar {% if pred.is_tumor == 'True' %}conf-bar-red{% else %}conf-bar-green{% endif %}"
+                         style="width: {{ pred.confidence }}%"></div>
+                    <span>{{ pred.confidence }}%</span>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge {% if pred.is_tumor == 'True' %}badge-danger{% else %}badge-success{% endif %}">
+                    {% if pred.is_tumor == 'True' %}Tumor{% else %}Clear{% endif %}
+                  </span>
+                </td>
+                <td class="date-cell">{{ pred.created_at }}</td>
+                <td>
+                  <div class="action-btns">
+                    <a href="{{ url_for('result', pred_id=pred.prediction_id) }}" class="btn btn-xs">View</a>
+                    <a href="{{ url_for('download_report', pred_id=pred.prediction_id) }}" class="btn btn-xs btn-outline">PDF</a>
+                    <button class="btn btn-xs btn-danger" onclick="confirmDelete('{{ pred.prediction_id }}')">Del</button>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="empty-state hidden" id="noResults">
+        <div class="empty-icon">🔎</div>
+        <h3>No results found</h3>
+        <p>Try a different search term or filter.</p>
+      </div>
+
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">🔬</div>
+        <h3>No predictions yet</h3>
+        <p>Upload your first MRI scan to see results here.</p>
+        <a href="{{ url_for('upload') }}" class="btn btn-primary">Upload MRI</a>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-overlay hidden" id="deleteModal">
+  <div class="modal">
+    <div class="modal-icon">🗑️</div>
+    <h3>Delete Prediction?</h3>
+    <p>This will permanently delete this prediction record and its associated files.</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <form method="POST" id="deleteForm">
+        <button type="submit" class="btn btn-danger">Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% include 'footer_partial.html' %}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+<script>
+  // Search
+  document.getElementById('searchInput').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    applyFilter(q);
+  });
+
+  let currentFilter = 'all';
+
+  function filterPredictions(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilter(document.getElementById('searchInput').value.toLowerCase());
+  }
+
+  function applyFilter(q) {
+    const rows = document.querySelectorAll('.history-row');
+    let visible = 0;
+    rows.forEach(row => {
+      const matchFilter = currentFilter === 'all' || row.dataset.type === currentFilter;
+      const matchSearch = !q || row.dataset.search.toLowerCase().includes(q);
+      if (matchFilter && matchSearch) { row.style.display = ''; visible++; }
+      else row.style.display = 'none';
+    });
+    document.getElementById('noResults').classList.toggle('hidden', visible > 0);
+    const wrapper = document.getElementById('historyTableWrapper');
+    if (wrapper) wrapper.classList.toggle('hidden', visible === 0);
+  }
+
+  function confirmDelete(predId) {
+    document.getElementById('deleteForm').action = `/history/delete/${predId}`;
+    document.getElementById('deleteModal').classList.remove('hidden');
+  }
+
+  function closeModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+  }
+
+  document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
+</body>
+</html>
